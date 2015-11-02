@@ -11,23 +11,20 @@ function SpeechParser(_cfg) {
     ignore: ''
   });
 
-  this.tokenizer = (function (lang) {
-    switch(lang) {
-      case 'ru':
-        return new natural.AggressiveTokenizerRu();
-      default:
-        return new natural.AggressiveTokenizer();
+  var prefix = (function(lang) {
+    if(lang === 'en') {
+      return '';
     }
+    return lang.charAt(0).toUpperCase() + lang.slice(1);
   }(cfg.lang));
 
-  this.stem = (function (lang) {
-    switch(lang) {
-      case 'ru':
-        return natural.PorterStemmerRu.stem;
-      default:
-        return natural.PorterStemmer.stem;
-    }
-  }(cfg.lang));
+  var tokenizer = 'AggressiveTokenizer' + prefix;
+  var stem = 'PorterStemmer'+prefix+'';
+  if(!natural[tokenizer] || !natural[stem]) {
+    throw new Error('language '+cfg.lang+' dont supported');
+  }
+  this.tokenizer = new natural[tokenizer]();
+  this.stem = natural[stem].stem;
 
   this.listen = this.extractTokens(cfg.listen, 3);
   this.ignore = this.extractTokens(cfg.ignore, 3);
