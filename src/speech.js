@@ -21,9 +21,11 @@ function Speech(_cfg) {
   this.defaultToken = 'default';
   this.tokenizer = new natural[tokenizer]();
   this.stem = natural[stem].stem;
-  this.tree = new Tree(cfg.listen, function (text) {
-    return this.extractTokens(text, 3);
-  }.bind(this), this.defaultToken);
+  if(cfg.listen) {
+    this.tree = new Tree(cfg.listen, function (text) {
+      return this.extractTokens(text, 3);
+    }.bind(this), this.defaultToken);
+  }
 }
 
 Speech.prototype.extractTokens = function (text, length) {
