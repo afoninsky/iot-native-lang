@@ -1,13 +1,17 @@
 'use strict';
+var _ = require('lodash');
 
 var UnbalancedTree = function (input, extractor, defaultToken) {
 
+  var leafs = {}, targets = [];
   var parseNode = function (node) {
     var leaf = {};
-    if(typeof node !== 'object') {
-      return node;
+    if(!_.isPlainObject(node)) {
+      targets.push(node);
+      return targets.length;
     }
     var iterate = function (item) {
+      leafs[item] = true;
       leaf[item] = parseNode(node[key]);
     };
 
@@ -18,8 +22,12 @@ var UnbalancedTree = function (input, extractor, defaultToken) {
   };
 
   this.struct = parseNode(input);
+  this.targets = targets;
+  delete leafs[defaultToken];
+  this.leafs = Object.keys(leafs);
   this.default = defaultToken;
 };
+
 
 UnbalancedTree.prototype.findRoute = function (allowedSteps) {
 
@@ -36,7 +44,7 @@ UnbalancedTree.prototype.findRoute = function (allowedSteps) {
       if (index === -1) { // allowed step not found - didnt go here
         continue;
       }
-      if(typeof newTree !== 'object') { // string found
+      if(!isNaN(newTree)) { // endpoint found
         found = newTree;
         steps.splice(index, 1);
         itemsLeft = steps;
@@ -50,8 +58,9 @@ UnbalancedTree.prototype.findRoute = function (allowedSteps) {
     return defaultFound;
   };
 
+  var found = travelTree(this.struct, allowedSteps, true);
   return {
-    found: travelTree(this.struct, allowedSteps, true),
+    found: this.targets[found] || null,
     left: itemsLeft
   };
 };

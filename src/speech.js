@@ -8,6 +8,7 @@ function Speech(_cfg) {
 
   var cfg = this.cfg = _.defaults(_cfg || {}, {
     lang: 'en',
+    minTokenLength: 3
   });
 
   var prefix = (cfg.lang === 'en') ? '' : cfg.lang.charAt(0).toUpperCase() + cfg.lang.slice(1),
@@ -23,7 +24,7 @@ function Speech(_cfg) {
   this.stem = natural[stem].stem;
   if(cfg.listen) {
     this.tree = new Tree(cfg.listen, function (text) {
-      return this.extractTokens(text, 3);
+      return this.extractTokens(text, cfg.minTokenLength);
     }.bind(this), this.defaultToken);
   }
 }
