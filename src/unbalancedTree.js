@@ -8,7 +8,8 @@ var UnbalancedTree = function (input, extractor, defaultToken) {
     var leaf = {};
     if(!_.isPlainObject(node)) {
       targets.push(node);
-      return targets.length;
+      return targets.length - 1;
+      // return node;
     }
     var iterate = function (item) {
       leafs[item] = true;
@@ -31,37 +32,28 @@ var UnbalancedTree = function (input, extractor, defaultToken) {
 
 UnbalancedTree.prototype.findRoute = function (allowedSteps) {
 
-  var itemsLeft = allowedSteps, defaultToken = this.default;
-  var travelTree = function (tree, steps) {
-    var found, defaultFound = null;
-    if(!steps.length) { return null; } // no luck
-    for(var step in tree) {
-      var newTree = tree[step];
-      if(defaultToken && step === defaultToken) { // if default exists and no luck with key - with use this one
-        defaultFound = travelTree(newTree, steps.slice());
-      }
-      var index = steps.indexOf(step);
-      if (index === -1) { // allowed step not found - didnt go here
-        continue;
-      }
-      if(!isNaN(newTree)) { // endpoint found
-        found = newTree;
-        steps.splice(index, 1);
-        itemsLeft = steps;
-        return found;
-      }
-      var clonnedSteps = steps.slice();
-      clonnedSteps.splice(index, 1);
-      found = travelTree(newTree, clonnedSteps);
-      if(found) { return found; }
+  var targets = this.targets;
+  var foundItem, passedSteps = [], travel = function (items, steps) {
+    if(foundItem) { return; }
+    if(typeof items === 'number') {
+      foundItem = targets[items];
+      passedSteps = steps;
+      return;
     }
-    return defaultFound;
+    for(var _token in items) {
+      if(allowedSteps.indexOf(_token) !== -1) {
+        var _steps = steps.slice();
+        _steps.push(_token);
+        travel(items[_token], _steps);
+      }
+    }
   };
+  travel(this.struct, []);
 
-  var found = travelTree(this.struct, allowedSteps, true);
   return {
-    found: this.targets[found] || null,
-    left: itemsLeft
+    found: foundItem,
+    route: passedSteps,
+    left: _.difference(allowedSteps, passedSteps)
   };
 };
 
